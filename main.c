@@ -11,13 +11,11 @@ int main(void)
 	chip8_init(&chip8);
 	chip8_load_rom(&chip8, "roms/test.ch8");
 
-	chip8.display[TEST_I] = TEST_V; 
-	printf("Before Cycle: display[%d] = %d\n", TEST_I, chip8.display[TEST_I]);
-	printf("PC: %d\n", chip8.pc);
-
-	chip8_cycle(&chip8);
-	printf("After Cycle: display[%d] = %d\n", TEST_I, chip8.display[TEST_I]);
-	printf("PC: %d\n", chip8.pc);
+	for (int i = 0; i < 16; i++)
+	{
+	    chip8_cycle(&chip8);
+	    printf("Cycle %d: V0=%d VA=%d VF=%d PC=%d\n", i, chip8.regs[0], chip8.regs[0xA], chip8.regs[0xF], chip8.pc);
+	}
 	
 	return 0;
 }

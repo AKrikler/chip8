@@ -90,7 +90,7 @@ void chip8_cycle(Chip8* chip8)
 			}
 			break;
 		case 0x5:
-			if (chip8->regs[opcode >> 8 & 0x0F] == chip8->regs[opcode >> 4 & 0xF])
+			if (chip8->regs[opcode >> 8 & 0x0F] == chip8->regs[opcode >> 4 & 0x0F])
 			{
 				chip8->pc += 2;
 			}
@@ -105,22 +105,36 @@ void chip8_cycle(Chip8* chip8)
 			switch (opcode & 0xF)
 			{
 				case 0x0:
+					chip8->regs[opcode >> 8 & 0x0F] = chip8->regs[opcode >> 4 & 0x0F];
 					break;
 				case 0x1:
+					chip8->regs[opcode >> 8 & 0x0F] |= chip8->regs[opcode >> 4 & 0x0F];
 					break;
 				case 0x2:
+					chip8->regs[opcode >> 8 & 0x0F] &= chip8->regs[opcode >> 4 & 0x0F];
 					break;
 				case 0x3:
+					chip8->regs[opcode >> 8 & 0x0F] ^= chip8->regs[opcode >> 4 & 0x0F];
 					break;
 				case 0x4:
+					chip8->regs[0xF] = chip8->regs[opcode >> 8 & 0x0F] + chip8->regs[opcode >> 4 & 0xF] > 0xFF ? 1 : 0;
+					chip8->regs[opcode >> 8 & 0x0F] += chip8->regs[opcode >> 4 & 0x0F];
 					break;
 				case 0x5:
+					chip8->regs[0xF] = chip8->regs[opcode >> 8 & 0x0F] >= chip8->regs[opcode >> 4 & 0xF] ? 1 : 0;
+					chip8->regs[opcode >> 8 & 0x0F] -= chip8->regs[opcode >> 4 & 0xF];
 					break;
 				case 0x6:
+					chip8->regs[0xF] = chip8->regs[opcode >> 8 & 0x0F] & 0x1;
+					chip8->regs[opcode >> 8 & 0x0F] >>= 1;
 					break;
 				case 0x7:
+					chip8->regs[0xF] = chip8->regs[opcode >> 4 & 0xF] >= chip8->regs[opcode >> 8 & 0x0F] ? 1 : 0;
+					chip8->regs[opcode >> 4 & 0xF] -= chip8->regs[opcode >> 8 & 0x0F];
 					break;
 				case 0xE:
+					chip8->regs[0xF] = (chip8->regs[opcode >> 8 & 0x0F] & 0x80) >> 7;
+					chip8->regs[opcode >> 8 & 0x0F] <<= 1;
 					break;					
 			}
 			break;
