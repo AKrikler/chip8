@@ -63,7 +63,7 @@ void chip8_cycle(Chip8* chip8)
 			}
 			else if (opcode == 0x00EE)
 			{
-				// 00EE RET
+				chip8->pc = chip8->stack[--chip8->sp];
 			}
 			else
 			{
@@ -71,25 +71,35 @@ void chip8_cycle(Chip8* chip8)
 			}
 			break;
 		case 0x1:
-			// 1nnn JP addr
+			chip8->pc = opcode & 0x0FFF;
 			break;
 		case 0x2:
-			// 2nnn CALL addr
+			chip8->stack[chip8->sp++] = chip8->pc;
+			chip8->pc = opcode & 0x0FFF;
 			break;
 		case 0x3:
-			// 3xkk SE Vx, byte
+			if (chip8->regs[opcode >> 8 & 0x0F] == (opcode & 0xFF))
+			{
+				chip8->pc += 2;
+			}
 			break;
 		case 0x4:
-			// 4xkk SNE Vx, byte
+			if (chip8->regs[opcode >> 8 & 0x0F] != (opcode & 0xFF))
+			{
+				chip8->pc += 2;
+			}
 			break;
 		case 0x5:
-			// 5xy0 SE Vx, Vy
+			if (chip8->regs[opcode >> 8 & 0x0F] == chip8->regs[opcode >> 4 & 0xF])
+			{
+				chip8->pc += 2;
+			}
 			break;
 		case 0x6:
-			// 6xkk LD Vx, byte
+			chip8->regs[opcode >> 8 & 0x0F] = opcode & 0xFF;
 			break;
 		case 0x7:
-			// 7xkk ADD Vx, byte
+			chip8->regs[opcode >> 8 & 0x0F] += opcode & 0xFF;
 			break;
 		case 0x8:
 			switch (opcode & 0xF)
