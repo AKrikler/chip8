@@ -20,5 +20,6 @@ typedef struct
 
 void chip8_init(Chip8* chip8);
 void chip8_load_rom(Chip8* chip8, const char* filename);
+void chip8_cycle(Chip8* chip8);
 
 #endif
