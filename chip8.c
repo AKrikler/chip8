@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void chip8_init(Chip8* chip8)
 {
@@ -139,16 +140,19 @@ void chip8_cycle(Chip8* chip8)
 			}
 			break;
 		case 0x9:
-			// 9xy0 SNE Vx, Vy
+			if (chip8->regs[opcode >> 8 & 0x0F] != chip8->regs[opcode >> 4 & 0x0F])
+			{
+				chip8->pc += 2;
+			}
 			break;
 		case 0xA:
-			// Annn LD IR, addr
+			chip8->ir = opcode & 0x0FFF;
 			break;
 		case 0xB:
-			// Bnnn JP V0, addr
+			chip8->pc = chip8->regs[0x0] + (opcode & 0x0FFF);
 			break;
 		case 0xC:
-			// Cxkk RND Vx, byte
+			chip8->regs[opcode >> 8 & 0x0F] = (uint8_t)rand() & (opcode & 0xFF);
 			break;
 		case 0xD:
 			// Dxyn DRW Vx, Vy, nibble
