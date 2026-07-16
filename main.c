@@ -1,20 +1,40 @@
 #include <stdio.h>
 
+#include <unistd.h>
+
 #include "chip8.h"
 
-#define TEST_I 15
-#define TEST_V 135
+#define clear() printf("\033[H\033[J")
+#define gotoxy(x,y) printf("\033[%d;%dH", (y), (x))
 
 int main(void)
 {
 	Chip8 chip8;
 	chip8_init(&chip8);
-	chip8_load_rom(&chip8, "roms/test.ch8");
+	chip8_load_rom(&chip8, "roms/animation.ch8");
 
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 20; i++)
 	{
-	    chip8_cycle(&chip8);
-	    printf("Cycle %d: V0=%d VA=%d VF=%d PC=%d\n", i, chip8.regs[0], chip8.regs[0xA], chip8.regs[0xF], chip8.pc);
+		chip8_cycle(&chip8);
+		usleep(300000);
+
+		clear();
+		gotoxy(0,0);
+		for (int j = 0; j < 32; j++)
+		{
+			for (int k = 0; k < 64; k++)
+			{
+				if (chip8.display[j * 64 + k] == 1)
+				{
+					printf("#");
+				}
+				else
+				{
+					printf(".");
+				}
+			}
+			printf("\n");
+		}
 	}
 	
 	return 0;

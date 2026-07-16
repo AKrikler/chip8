@@ -5,15 +5,17 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define COORD(x, y) ((x) + (y) * 64)
+
 void chip8_init(Chip8* chip8)
 {
 	memset(chip8->memory, 0, sizeof(chip8->memory));
 	memset(chip8->regs, 0, sizeof(chip8->regs));
 	chip8->ir = 0;
 	chip8->pc = CHIP8_ROM_START;
-	memset(chip8->display, 0, sizeof(chip8->display));
-	memset(chip8->stack, 0, sizeof(chip8->stack));
 	chip8->sp = 0;
+	memset(chip8->stack, 0, sizeof(chip8->stack));
+	memset(chip8->display, 0, sizeof(chip8->display));
 	chip8->delay_timer = 0;
 	chip8->sound_timer = 0;
 }
@@ -50,9 +52,7 @@ void chip8_load_rom(Chip8* chip8, const char* filename)
 
 void chip8_cycle(Chip8* chip8)
 {
-	uint8_t high = chip8->memory[chip8->pc];
-	uint8_t low = chip8->memory[chip8->pc+1];
-	uint16_t opcode = high << 8 | low;
+	uint16_t opcode = (chip8->memory[chip8->pc] << 8) | (chip8->memory[chip8->pc+1]);
 	chip8->pc += 2;
 
 	switch (opcode >> 12)
@@ -65,10 +65,6 @@ void chip8_cycle(Chip8* chip8)
 			else if (opcode == 0x00EE)
 			{
 				chip8->pc = chip8->stack[--chip8->sp];
-			}
-			else
-			{
-				// 0nnn
 			}
 			break;
 		case 0x1:
@@ -155,8 +151,24 @@ void chip8_cycle(Chip8* chip8)
 			chip8->regs[opcode >> 8 & 0x0F] = (uint8_t)rand() & (opcode & 0xFF);
 			break;
 		case 0xD:
-			// Dxyn DRW Vx, Vy, nibble
-			break;
+			{
+				uint8_t vx = chip8->regs[opcode >> 8 & 0x0F];
+				uint8_t vy = chip8->regs[opcode >> 4 & 0x0F];
+				int collision = 0;
+
+				for (int i = 0; i < (opcode & 0x0F); i++)
+				{
+					for (int j = 0; j < 8; j++)
+					{
+						uint8_t prev = chip8->display[COORD(vx + j, vy + i)];
+						chip8->display[COORD(vx + j, vy + i)] ^= (chip8->memory[chip8->ir + i] >> (7 - j)) & 1;
+						collision += prev == 1 && chip8->display[COORD(vx + j, vy + i)] != prev ? 1 : 0;
+					}
+				}
+				chip8->regs[0xF] = collision ? 1 : 0;
+				break;				
+			}
+
 		case 0xE:
 			switch (opcode & 0xFF)
 			{
