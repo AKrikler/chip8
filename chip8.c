@@ -7,6 +7,25 @@
 
 #define COORD(x, y) ((x) + (y) * 64)
 
+uint8_t fontset[80] = {
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+};
+
 void chip8_init(Chip8* chip8)
 {
 	memset(chip8->memory, 0, sizeof(chip8->memory));
@@ -16,8 +35,11 @@ void chip8_init(Chip8* chip8)
 	chip8->sp = 0;
 	memset(chip8->stack, 0, sizeof(chip8->stack));
 	memset(chip8->display, 0, sizeof(chip8->display));
+	memset(chip8->keypad, 0, sizeof(chip8->keypad));
 	chip8->delay_timer = 0;
 	chip8->sound_timer = 0;
+
+	memcpy(chip8->memory, fontset, sizeof(fontset));
 }
 
 void chip8_load_rom(Chip8* chip8, const char* filename)
@@ -54,6 +76,8 @@ void chip8_cycle(Chip8* chip8)
 {
 	uint16_t opcode = (chip8->memory[chip8->pc] << 8) | (chip8->memory[chip8->pc+1]);
 	chip8->pc += 2;
+
+	printf("PC=%d opcode=0x%04X\n", chip8->pc, opcode);
 
 	switch (opcode >> 12)
 	{
@@ -127,7 +151,7 @@ void chip8_cycle(Chip8* chip8)
 					break;
 				case 0x7:
 					chip8->regs[0xF] = chip8->regs[opcode >> 4 & 0xF] >= chip8->regs[opcode >> 8 & 0x0F] ? 1 : 0;
-					chip8->regs[opcode >> 4 & 0xF] -= chip8->regs[opcode >> 8 & 0x0F];
+					chip8->regs[opcode >> 8 & 0xF] = chip8->regs[opcode >> 4 & 0x0F] - chip8->regs[opcode >> 8 & 0x0F];
 					break;
 				case 0xE:
 					chip8->regs[0xF] = (chip8->regs[opcode >> 8 & 0x0F] & 0x80) >> 7;
@@ -160,8 +184,10 @@ void chip8_cycle(Chip8* chip8)
 				{
 					for (int j = 0; j < 8; j++)
 					{
-						uint8_t prev = chip8->display[COORD(vx + j, vy + i)];
-						chip8->display[COORD(vx + j, vy + i)] ^= (chip8->memory[chip8->ir + i] >> (7 - j)) & 1;
+						int x = (vx + j) % 64;
+						int y = (vy + i) % 32;
+						uint8_t prev = chip8->display[COORD(x, y)];
+						chip8->display[COORD(x, y)] ^= (chip8->memory[chip8->ir + i] >> (7 - j)) & 1;
 						collision += prev == 1 && chip8->display[COORD(vx + j, vy + i)] != prev ? 1 : 0;
 					}
 				}
@@ -173,8 +199,16 @@ void chip8_cycle(Chip8* chip8)
 			switch (opcode & 0xFF)
 			{
 				case 0x9E:
+					if (chip8->keypad[opcode >> 8 & 0x0F])
+					{
+						chip8->pc += 2;
+					}
 					break;
 				case 0xA1:
+					if (!chip8->keypad[opcode >> 8 & 0x0F])
+					{
+						chip8->pc += 2;
+					}
 					break;
 			}
 			break;
@@ -182,22 +216,58 @@ void chip8_cycle(Chip8* chip8)
 			switch (opcode & 0xFF)
 			{
 				case 0x07:
+					chip8->regs[opcode >> 8 & 0x0F] = chip8->delay_timer;
 					break;
 				case 0x0A:
-					break;
+				{
+				    int pressed = -1;
+				    for (int i = 0; i < 16; i++)
+				    {
+				        if (chip8->keypad[i])
+				        {
+				            pressed = i;
+				            break;
+				        }
+				    }
+				    if (pressed != -1) chip8->regs[(opcode & 0x0F00) >> 8] = pressed;
+				    else chip8->pc -= 2; 
+				    break;
+				}
 				case 0x15:
+					chip8->delay_timer = chip8->regs[opcode >> 8 & 0x0F];
 					break;
 				case 0x18:
+					chip8->sound_timer = chip8->regs[opcode >> 8 & 0x0F];
 					break;
 				case 0x1E:
+					chip8->ir += chip8->regs[opcode >> 8 & 0x0F];
 					break;
 				case 0x29:
+					chip8->ir = chip8->regs[opcode >> 8 & 0x0F] * 5;
 					break;
 				case 0x33:
+				{
+					uint8_t vx = chip8->regs[opcode >> 8 & 0x0F];
+					uint8_t hundreds = vx / 100;
+					uint8_t tens = (vx - hundreds * 100) / 10;
+					uint8_t ones = (vx - hundreds * 100 - tens * 10);
+
+					chip8->memory[chip8->ir + 0] = hundreds;
+					chip8->memory[chip8->ir + 1] = tens;
+					chip8->memory[chip8->ir + 2] = ones;
 					break;
+				}
 				case 0x55:
+					for (int i = 0; i <= (opcode >> 8 & 0x0F); i++)
+					{
+						chip8->memory[chip8->ir + i] = chip8->regs[i];
+					}
 					break;
 				case 0x65:
+					for (int i = 0; i <= (opcode >> 8 & 0x0F); i++)
+					{
+						chip8->regs[i] = chip8->memory[chip8->ir + i];
+					}
 					break;
 			}
 			break;

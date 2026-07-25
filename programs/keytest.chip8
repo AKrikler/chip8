@@ -1,0 +1,13 @@
+; this is a comment, testing comment handling
+start:
+    LD V0, 5
+    LD V1, 3
+
+loop:
+    LD I, sprite ; an inline comment too
+    DRW V0, V1, 3
+    ADD V0, 1
+    JP loop
+
+sprite:
+    DB 0xF0, 0x90, 0xF0

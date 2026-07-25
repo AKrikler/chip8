@@ -11,9 +11,10 @@ typedef struct
 	uint8_t regs[16];
 	uint16_t ir;
 	uint16_t pc;
-	uint8_t display[64*32];
-	uint16_t stack[16];
 	uint8_t sp;
+	uint16_t stack[16];
+	uint8_t display[64*32];
+	uint8_t keypad[16];
 	uint8_t delay_timer;
 	uint8_t sound_timer;
 } Chip8;
