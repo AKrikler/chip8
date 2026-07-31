@@ -40,7 +40,7 @@ void chip8_load_rom(Chip8* chip8, const char* path)
 	rewind(f);
 	
 	if (size > 0 && (size_t)size <= sizeof(chip8->memory) - CHIP8_ROM_START) fread(chip8->memory + CHIP8_ROM_START, 1, size, f);
-	else fprintf(stderr, "ROM (%zu bytes) too large for Chip8 (%zu bytes)\n", size, sizeof(chip8->memory) - CHIP8_ROM_START);
+	else fprintf(stderr, "ROM (%zu bytes) too large for Chip8 (%zu bytes)\n", (size_t)size, sizeof(chip8->memory) - CHIP8_ROM_START);
 	
 	fclose(f);
 }

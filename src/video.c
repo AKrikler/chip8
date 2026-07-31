@@ -1,6 +1,8 @@
 #include "video.h"
 #include "chip8.h"
 
+#include <stdio.h>
+
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Texture* texture;

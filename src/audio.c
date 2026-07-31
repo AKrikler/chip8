@@ -1,6 +1,8 @@
 #include "audio.h"
-
 #include "chip8.h"
+
+#include <stdio.h>
+#include <math.h>
 
 void audio_callback(void* userdata, Uint8* stream, int len)
 {

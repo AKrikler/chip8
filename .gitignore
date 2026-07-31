@@ -2,3 +2,6 @@ chip8_emulator
 assembler
 
 obj/
+deps/
+
+*.exe
