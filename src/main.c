@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
 	Clock clock;
 	chip8_init(&chip8);
 	video_init(argv[1]);
-	audio_init(&chip8);
+	audio_init();
 	clock_init(&clock, 60.0);
 	chip8_load_rom(&chip8, argv[1]);
 
@@ -32,10 +32,11 @@ int main(int argc, char* argv[])
 		    if (chip8.sound_timer > 0) chip8.sound_timer--;	
 		}
 
+		audio_update(&chip8);
 		video_render(&chip8);
 	}
 
-	video_close();
 	audio_close();
+	video_close();
 	return 0;
 }

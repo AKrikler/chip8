@@ -1,6 +1,6 @@
 CC = @gcc
 CFLAGS = -Wall -Wextra -std=c99 -Iinclude
-LIBS = -lSDL2 -lm
+LIBS = -lSDL3 -lm
 
 EMU_TARGET = chip8_emulator
 ASM_TARGET = assembler
@@ -15,11 +15,12 @@ WIN_CC = x86_64-w64-mingw32-gcc
 WIN_DEST = /mnt/c/Users/$(USER)/Downloads
 WIN_EMU_TARGET = $(WIN_DEST)/chip8_emulator.exe 
 WIN_ASM_TARGET = $(WIN_DEST)/assembler.exe
-WIN_LIBS = -lmingw32 -lSDL2main -lSDL2 -lm -mwindows
+WIN_LIBS = -lmingw32 -lSDL3 -lm -mwindows
 
 SDL_DEPS_DIR = deps/sdl-mingw
-SDL_WIN_INC = $(SDL_DEPS_DIR)/SDL2-2.30.2/x86_64-w64-mingw32/include
-SDL_WIN_LIB = $(SDL_DEPS_DIR)/SDL2-2.30.2/x86_64-w64-mingw32/lib
+SDL_VERSION = 3.4.14
+SDL_WIN_INC = $(SDL_DEPS_DIR)/SDL3-$(SDL_VERSION)/x86_64-w64-mingw32/include
+SDL_WIN_LIB = $(SDL_DEPS_DIR)/SDL3-$(SDL_VERSION)/x86_64-w64-mingw32/lib
 
 all: $(EMU_TARGET) $(ASM_TARGET)
 
@@ -39,12 +40,12 @@ obj:
 	@mkdir -p obj
 
 $(SDL_DEPS_DIR):
-	@echo "Downloading Windows SDL2 development libraries..."
+	@echo "Downloading Windows SDL3 development libraries..."
 	@mkdir -p deps
-	@curl -L https://www.libsdl.org/release/SDL2-devel-2.30.2-mingw.tar.gz -o deps/sdl2.tar.gz
+	@curl -L https://github.com/libsdl-org/SDL/releases/download/release-$(SDL_VERSION)/SDL3-devel-$(SDL_VERSION)-mingw.tar.gz -o deps/sdl3.tar.gz
 	@mkdir -p $(SDL_DEPS_DIR)
-	@tar -xzf deps/sdl2.tar.gz -C $(SDL_DEPS_DIR)
-	@rm deps/sdl2.tar.gz
+	@tar -xzf deps/sdl3.tar.gz -C $(SDL_DEPS_DIR)
+	@rm deps/sdl3.tar.gz
 
 windows: $(SDL_DEPS_DIR) $(WIN_DEST)
 	$(WIN_CC) src/*.c -Wall -Wextra -std=c99 -Iinclude -I$(SDL_WIN_INC) -L$(SDL_WIN_LIB) -o $(WIN_EMU_TARGET) $(WIN_LIBS)
