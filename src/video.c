@@ -9,13 +9,24 @@ SDL_Texture* texture;
 
 static int closed = 0;
 
-int video_init(void)
+int video_init(const char* path)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) return fprintf(stderr, "SDL Init Error: %s\n", SDL_GetError()), -1;
 
 	SDL_CreateWindowAndRenderer(CHIP8_DISPLAY_WIDTH * SCALE, CHIP8_DISPLAY_HEIGHT * SCALE, 0, &window, &renderer);
 	texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, CHIP8_DISPLAY_WIDTH, CHIP8_DISPLAY_HEIGHT);
 	SDL_RenderSetScale(renderer, SCALE, SCALE);
+
+
+	char filename[64];
+	const char* fwd = strrchr(path, '/');
+	const char* back = strrchr(path, '\\');
+	const char* slash = fwd > back ? fwd : back;
+	strncpy(filename, slash ? slash + 1 : path, 64);
+	*strrchr(filename, '.') = '\0';
+	filename[63] = '\0';
+	SDL_SetWindowTitle(window, filename);
+	
 	return 0;
 }
 

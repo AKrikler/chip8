@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 	Chip8 chip8;
 	Clock clock;
 	chip8_init(&chip8);
-	video_init();
+	video_init(argv[1]);
 	audio_init(&chip8);
 	clock_init(&clock, 60.0);
 	chip8_load_rom(&chip8, argv[1]);

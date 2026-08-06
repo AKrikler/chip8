@@ -5,7 +5,7 @@
 
 #define SCALE 8
 
-int video_init(void);
+int video_init(const char* path);
 void video_render(void* userdata);
 void video_close(void);
 
