@@ -7,6 +7,8 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Texture* texture;
 
+static int closed = 0;
+
 int video_init(void)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) return fprintf(stderr, "SDL Init Error: %s\n", SDL_GetError()), -1;
@@ -32,8 +34,12 @@ void video_render(void* userdata)
 
 void video_close(void)
 {
-	if (texture) SDL_DestroyTexture(texture);
-	if (renderer) SDL_DestroyRenderer(renderer);
-	if (window) SDL_DestroyWindow(window);
-	SDL_Quit();	
+	if (!closed)
+	{
+		if (texture) SDL_DestroyTexture(texture);
+		if (renderer) SDL_DestroyRenderer(renderer);
+		if (window) SDL_DestroyWindow(window);
+		SDL_Quit();
+		closed = 1;
+	}
 }
