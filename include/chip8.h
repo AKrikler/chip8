@@ -9,6 +9,16 @@
 
 #define CHIP8_COORD(x, y) ((x) + (y) * CHIP8_DISPLAY_WIDTH)
 
+typedef enum {
+	CHIP8_ERR_INVALID_ROM	  = -5,
+	CHIP8_ERR_ROM_TOO_LARGE   = -4,
+	CHIP8_ERR_FILE_NOT_FOUND  = -3,
+    CHIP8_ERR_STACK_OVERFLOW  = -2,
+    CHIP8_ERR_STACK_UNDERFLOW = -1,
+    CHIP8_OK                  =  0,
+    CHIP8_DREW_FRAME          =  1,
+} Chip8Status;
+
 typedef struct
 {
 	uint8_t memory[4096];
@@ -24,7 +34,7 @@ typedef struct
 } Chip8;
 
 void chip8_init(Chip8* chip8);
-void chip8_load_rom(Chip8* chip8, const char* filename);
-void chip8_cycle(Chip8* chip8);
+Chip8Status chip8_load_rom(Chip8* chip8, const char* filename);
+Chip8Status chip8_cycle(Chip8* chip8);
 
 #endif

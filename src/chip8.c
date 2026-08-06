@@ -31,21 +31,31 @@ void chip8_init(Chip8* chip8)
 	memcpy(chip8->memory, fontset, sizeof(fontset));
 }
 
-void chip8_load_rom(Chip8* chip8, const char* path)
+Chip8Status chip8_load_rom(Chip8* chip8, const char* path)
 {
 	FILE* f = fopen(path, "rb");
-	if (!f) return (void)(perror("Failed to open ROM"));
+	if (!f) return CHIP8_ERR_FILE_NOT_FOUND;
 
 	long size = (fseek(f, 0, SEEK_END), ftell(f));
 	rewind(f);
 	
 	if (size > 0 && (size_t)size <= sizeof(chip8->memory) - CHIP8_ROM_START) fread(chip8->memory + CHIP8_ROM_START, 1, size, f);
-	else fprintf(stderr, "ROM (%zu bytes) too large for Chip8 (%zu bytes)\n", (size_t)size, sizeof(chip8->memory) - CHIP8_ROM_START);
+	else if (size <= 0)
+	{
+		fclose(f);
+		return CHIP8_ERR_INVALID_ROM;
+	}
+	else
+	{
+		fclose(f);
+		return CHIP8_ERR_ROM_TOO_LARGE;
+	}
 	
 	fclose(f);
+	return CHIP8_OK;
 }
 
-void chip8_cycle(Chip8* chip8)
+Chip8Status chip8_cycle(Chip8* chip8)
 {
 	uint16_t opcode = (chip8->memory[chip8->pc] << 8) | (chip8->memory[chip8->pc+1]);
 	chip8->pc += 2;
@@ -60,10 +70,30 @@ void chip8_cycle(Chip8* chip8)
 	{
 		case 0x0:
 			if (opcode == 0x00E0) memset(chip8->display, 0, sizeof(chip8->display));
-			else if (opcode == 0x00EE) chip8->pc = chip8->stack[--chip8->sp];
+			else if (opcode == 0x00EE)
+			{
+				if (chip8->sp > 0)
+				{
+					chip8->pc = chip8->stack[--chip8->sp];
+				}
+				else
+				{
+					return CHIP8_ERR_STACK_UNDERFLOW;
+				}
+			}
 			break;
 		case 0x1: chip8->pc = nnn; break;
-		case 0x2: chip8->stack[chip8->sp++] = chip8->pc, chip8->pc = nnn; break;
+		case 0x2:
+			if (chip8->sp < 16)
+			{
+				chip8->stack[chip8->sp++] = chip8->pc;
+				chip8->pc = nnn;
+				break;
+			}
+			else
+			{
+				return CHIP8_ERR_STACK_OVERFLOW;
+			}
 		case 0x3: if (chip8->regs[x] == kk) chip8->pc += 2; break;
 		case 0x4: if (chip8->regs[x] != kk) chip8->pc += 2; break;
 		case 0x5: if (chip8->regs[x] == chip8->regs[y]) chip8->pc += 2; break;
@@ -134,7 +164,7 @@ void chip8_cycle(Chip8* chip8)
 				}
 			}
 			chip8->regs[0xF] = collision ? 1 : 0;
-			break;				
+			return CHIP8_DREW_FRAME;
 		}
 		case 0xE:
 			if (kk == 0x9E && chip8->keypad[chip8->regs[x]]) chip8->pc += 2;
@@ -208,4 +238,5 @@ void chip8_cycle(Chip8* chip8)
 			}
 			break;
 	}
+	return CHIP8_OK;
 }
