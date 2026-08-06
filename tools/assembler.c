@@ -10,6 +10,11 @@ typedef struct
 	uint16_t address;
 } Label;
 
+int is_reg(const char* str)
+{
+	return strlen(str) == 2 && str[0] == 'V' && isxdigit((unsigned char)str[1]);
+}
+
 int is_number(const char* str)
 {
 	for (int i = 0; str[i] != '\0'; i++)
@@ -171,13 +176,13 @@ int main(int argc, char* argv[])
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 
-					if (op1[0] == 'V' && is_number(op1 + 1) && is_number(op2))
+					if (is_reg(op1) && is_number(op2))
 					{
-						opcode = 0x3000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
+						opcode = 0x3000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
 					}
-					else if (op1[0] == 'V' && is_number(op1 + 1) && op2[0] == 'V' && is_number(op2 + 1))
+					else if (is_reg(op1) && is_reg(op2))
 					{
-						opcode = 0x5000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+						opcode = 0x5000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 					}
 				}
 				else if (strcmp(mnemonic, "SNE") == 0)
@@ -185,13 +190,13 @@ int main(int argc, char* argv[])
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 					
-					if (op1[0] == 'V' && is_number(op1 + 1) && is_number(op2))
+					if (is_reg(op1) && is_number(op2))
 					{
-						opcode = 0x4000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
+						opcode = 0x4000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
 					}
-					else if (op1[0] == 'V' && is_number(op1 + 1) && op2[0] == 'V' && is_number(op2 + 1))
+					else if (is_reg(op1) && is_reg(op2))
 					{
-						opcode = 0x9000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+						opcode = 0x9000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 					}
 				}
 				else if (strcmp(mnemonic, "LD") == 0)
@@ -199,49 +204,49 @@ int main(int argc, char* argv[])
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 
-					if (op1[0] == 'V' && is_number(op1 + 1) && is_number(op2))
+					if (is_reg(op1) && is_number(op2))
 					{
-						opcode = 0x6000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
+						opcode = 0x6000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
 					}
-					else if (op1[0] == 'V' && is_number(op1 + 1) && op2[0] == 'V' && is_number(op2 + 1))
+					else if (is_reg(op1) && is_reg(op2))
 					{
-						opcode = 0x8000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+						opcode = 0x8000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 					}
 					else if (strcmp(op1, "I") == 0)
 					{
 						opcode = 0xA000 | (is_number(op2) ? strtol(op2, NULL, 0) : find_label(labels, label_count, op2) & 0x0FFF);
 					}
-					else if (op1[0] == 'V' && is_number(op1 + 1) && strcmp(op2, "DT") == 0)
+					else if (is_reg(op1) && strcmp(op2, "DT") == 0)
 					{
-						opcode = 0xF007 | (strtol(op1 + 1, NULL, 0) << 8);
+						opcode = 0xF007 | (strtol(op1 + 1, NULL, 16) << 8);
 					}
-					else if (op1[0] == 'V' && is_number(op1 + 1) && strcmp(op2, "K") == 0)
+					else if (is_reg(op1) && strcmp(op2, "K") == 0)
 					{
-						opcode = 0xF00A | (strtol(op1 + 1, NULL, 0) << 8);
+						opcode = 0xF00A | (strtol(op1 + 1, NULL, 16) << 8);
 					}
-					else if (strcmp(op1, "DT") == 0 && op2[0] == 'V' && is_number(op2 + 1))
+					else if (strcmp(op1, "DT") == 0 && is_reg(op2))
 					{
-						opcode = 0xF015 | (strtol(op2 + 1, NULL, 0) << 8);
+						opcode = 0xF015 | (strtol(op2 + 1, NULL, 16) << 8);
 					}
-					else if (strcmp(op1, "ST") == 0 && op2[0] == 'V' && is_number(op2 + 1))
+					else if (strcmp(op1, "ST") == 0 && is_reg(op2))
 					{
-						opcode = 0xF018 | (strtol(op2 + 1, NULL, 0) << 8);
+						opcode = 0xF018 | (strtol(op2 + 1, NULL, 16) << 8);
 					}
-					else if (strcmp(op1, "F") == 0 && op2[0] == 'V' && is_number(op2 + 1))
+					else if (strcmp(op1, "F") == 0 && is_reg(op2))
 					{
-						opcode = 0xF029 | (strtol(op2 + 1, NULL, 0) << 8);
+						opcode = 0xF029 | (strtol(op2 + 1, NULL, 16) << 8);
 					}
-					else if (strcmp(op1, "B") == 0 && op2[0] == 'V' && is_number(op2 + 1))
+					else if (strcmp(op1, "B") == 0 && is_reg(op2))
 					{
-						opcode = 0xF033 | (strtol(op2 + 1, NULL, 0) << 8);
+						opcode = 0xF033 | (strtol(op2 + 1, NULL, 16) << 8);
 					}
-					else if (strcmp(op1, "[I]") == 0 && op2[0] == 'V' && is_number(op2 + 1))
+					else if (strcmp(op1, "[I]") == 0 && is_reg(op2))
 					{
-						opcode = 0xF055 | (strtol(op2 + 1, NULL, 0) << 8);
+						opcode = 0xF055 | (strtol(op2 + 1, NULL, 16) << 8);
 					}
-					else if (op1[0] == 'V' && is_number(op1 + 1) && strcmp(op2, "[I]") == 0)
+					else if (is_reg(op1) && strcmp(op2, "[I]") == 0)
 					{
-						opcode = 0xF065 | (strtol(op1 + 1, NULL, 0) << 8);
+						opcode = 0xF065 | (strtol(op1 + 1, NULL, 16) << 8);
 					}
 				}
 				else if (strcmp(mnemonic, "ADD") == 0)
@@ -249,17 +254,17 @@ int main(int argc, char* argv[])
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 
-					if (op1[0] == 'V' && is_number(op1 + 1) && is_number(op2))
+					if (is_reg(op1) && is_number(op2))
 					{
-						opcode = 0x7000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
+						opcode = 0x7000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
 					}
-					else if (op1[0] == 'V' && is_number(op1 + 1) && op2[0] == 'V' && is_number(op2 + 1))
+					else if (is_reg(op1) && is_reg(op2))
 					{
-						opcode = 0x8004 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+						opcode = 0x8004 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 					}
-					else if (strcmp(op1, "I") == 0 && op2[0] == 'V' && is_number(op2 + 1))
+					else if (strcmp(op1, "I") == 0 && is_reg(op2))
 					{
-						opcode = 0xF01E | (strtol(op2 + 1, NULL, 0) << 8);
+						opcode = 0xF01E | (strtol(op2 + 1, NULL, 16) << 8);
 					}
 				}
 				else if (strcmp(mnemonic, "OR") == 0)
@@ -267,50 +272,50 @@ int main(int argc, char* argv[])
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 					
-					opcode = 0x8001 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+					opcode = 0x8001 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 				}
 				else if (strcmp(mnemonic, "AND") == 0)
 				{
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 					
-					opcode = 0x8002 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+					opcode = 0x8002 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 				}
 				else if (strcmp(mnemonic, "XOR") == 0)
 				{
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 					
-					opcode = 0x8003 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+					opcode = 0x8003 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 				}
 				else if (strcmp(mnemonic, "SUB") == 0)
 				{
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 
-					opcode = 0x8005 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+					opcode = 0x8005 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 				}
 				else if (strcmp(mnemonic, "SHR") == 0)
 				{
-					opcode = 0x8006 | (strtol(strtok(NULL, " ,") + 1, NULL, 0) << 8);
+					opcode = 0x8006 | (strtol(strtok(NULL, " ,") + 1, NULL, 16) << 8);
 				}
 				else if (strcmp(mnemonic, "SUBN") == 0)
 				{
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 
-					opcode = 0x8007 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4);
+					opcode = 0x8007 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4);
 				}
 				else if (strcmp(mnemonic, "SHL") == 0)
 				{
-					opcode = 0x800E | (strtol(strtok(NULL, " ,") + 1, NULL, 0) << 8);
+					opcode = 0x800E | (strtol(strtok(NULL, " ,") + 1, NULL, 16) << 8);
 				}
 				else if (strcmp(mnemonic, "RND") == 0)
 				{
 					char* op1 = strtok(NULL, " ,");
 					char* op2 = strtok(NULL, " ,");
 
-					opcode = 0xC000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
+					opcode = 0xC000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2, NULL, 0) & 0x00FF);
 				}
 				else if (strcmp(mnemonic, "DRW") == 0)
 				{
@@ -318,15 +323,15 @@ int main(int argc, char* argv[])
 					char* op2 = strtok(NULL, " ,");
 					char* op3 = strtok(NULL, " ,");
 
-					opcode = 0xD000 | (strtol(op1 + 1, NULL, 0) << 8) | (strtol(op2 + 1, NULL, 0) << 4) | (strtol(op3, NULL, 0) & 0x000F);
+					opcode = 0xD000 | (strtol(op1 + 1, NULL, 16) << 8) | (strtol(op2 + 1, NULL, 16) << 4) | (strtol(op3, NULL, 0) & 0x000F);
 				}
 				else if (strcmp(mnemonic, "SKP") == 0)
 				{
-					opcode = 0xE09E | (strtol(strtok(NULL, " ,") + 1, NULL, 0) << 8);
+					opcode = 0xE09E | (strtol(strtok(NULL, " ,") + 1, NULL, 16) << 8);
 				}
 				else if (strcmp(mnemonic, "SKPN") == 0)
 				{
-					opcode = 0xE0A1 | (strtol(strtok(NULL, " ,") + 1, NULL, 0) << 8);
+					opcode = 0xE0A1 | (strtol(strtok(NULL, " ,") + 1, NULL, 16) << 8);
 				}
 				
 				uint8_t high = opcode >> 8;
