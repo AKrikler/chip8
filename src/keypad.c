@@ -8,6 +8,7 @@ int keypad_poll(void* userdata)
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)) return video_close(), -1;
+		if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) memset(chip8->keypad, 0, sizeof(chip8->keypad));
 		if ((event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) && event.key.repeat == 0)
 		{
 			uint8_t pressed = (event.type == SDL_KEYDOWN);
