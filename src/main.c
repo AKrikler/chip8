@@ -7,7 +7,7 @@
 #include "keypad.h"
 #include "clock.h"
 
-#define CYCLES_PER_FRAME 200
+#define CYCLES_PER_FRAME 12
 
 int main(int argc, char* argv[])
 {
