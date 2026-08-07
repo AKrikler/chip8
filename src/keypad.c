@@ -9,7 +9,7 @@ int keypad_poll(void* userdata)
 	Chip8* chip8 = (Chip8*)userdata;
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
-		if (event.type == SDL_EVENT_QUIT || (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)) return video_close(), -1;
+		if (event.type == SDL_EVENT_QUIT || (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE)) return -1;
 		if (event.type == SDL_EVENT_WINDOW_FOCUS_LOST) memset(chip8->keypad, 0, sizeof(chip8->keypad));
 		if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP)
 		{

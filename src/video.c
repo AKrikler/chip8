@@ -12,9 +12,7 @@ SDL_Texture* texture;
 static int closed = 0;
 
 int video_init(const char* path)
-{
-	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_VIDEO)) return fprintf(stderr, "SDL Init Error: %s\n", SDL_GetError()), -1; 
-	
+{		
 	char filename[64];
 	const char* fwd = strrchr(path, '/');
 	const char* back = strrchr(path, '\\');

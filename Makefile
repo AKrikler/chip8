@@ -15,12 +15,12 @@ WIN_CC = x86_64-w64-mingw32-gcc
 WIN_DEST = /mnt/c/Users/$(USER)/Downloads
 WIN_EMU_TARGET = $(WIN_DEST)/chip8_emulator.exe 
 WIN_ASM_TARGET = $(WIN_DEST)/assembler.exe
-WIN_LIBS = -lmingw32 -lSDL3 -lm -mwindows
 
-SDL_DEPS_DIR = deps/sdl-mingw
+SDL_DEPS_DIR = deps/sdl-source
 SDL_VERSION = 3.4.14
-SDL_WIN_INC = $(SDL_DEPS_DIR)/SDL3-$(SDL_VERSION)/x86_64-w64-mingw32/include
-SDL_WIN_LIB = $(SDL_DEPS_DIR)/SDL3-$(SDL_VERSION)/x86_64-w64-mingw32/lib
+SDL_WIN_INC = $(SDL_DEPS_DIR)/include
+WIN_STATIC_LIB = $(SDL_DEPS_DIR)/build-static/libSDL3.a
+WIN_LIBS = $(WIN_STATIC_LIB) -lmingw32 -lm -mwindows -lwinmm -limm32 -lole32 -loleaut32 -lversion -luuid -lsetupapi -lhid -ldxguid -DSDL_STATIC_LIB
 
 all: $(EMU_TARGET) $(ASM_TARGET)
 
@@ -40,20 +40,35 @@ obj:
 	@mkdir -p obj
 
 $(SDL_DEPS_DIR):
-	@echo "Downloading Windows SDL3 development libraries..."
+	@echo "Downloading full SDL3 source code for static compilation..."
 	@mkdir -p deps
-	@curl -L https://github.com/libsdl-org/SDL/releases/download/release-$(SDL_VERSION)/SDL3-devel-$(SDL_VERSION)-mingw.tar.gz -o deps/sdl3.tar.gz
+	@curl -L https://github.com/libsdl-org/SDL/releases/download/release-$(SDL_VERSION)/SDL3-$(SDL_VERSION).tar.gz -o deps/sdl3_src.tar.gz
 	@mkdir -p $(SDL_DEPS_DIR)
-	@tar -xzf deps/sdl3.tar.gz -C $(SDL_DEPS_DIR)
-	@rm deps/sdl3.tar.gz
+	@tar -xzf deps/sdl3_src.tar.gz -C $(SDL_DEPS_DIR) --strip-components=1
+	@rm deps/sdl3_src.tar.gz
 
-windows: $(SDL_DEPS_DIR) $(WIN_DEST)
-	$(WIN_CC) src/*.c -Wall -Wextra -std=c99 -Iinclude -I$(SDL_WIN_INC) -L$(SDL_WIN_LIB) -o $(WIN_EMU_TARGET) $(WIN_LIBS)
+$(WIN_STATIC_LIB): $(SDL_DEPS_DIR)
+	@echo "Cross-compiling SDL3 static library..."
+	@mkdir -p $(SDL_DEPS_DIR)/build-static
+	@cd $(SDL_DEPS_DIR)/build-static && \
+	cmake .. \
+		-DCMAKE_SYSTEM_NAME=Windows \
+		-DCMAKE_C_COMPILER=x86_64-w64-mingw32-gcc \
+		-DCMAKE_CXX_COMPILER=x86_64-w64-mingw32-g++ \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DSDL_STATIC=ON \
+		-DSDL_SHARED=OFF \
+		-DSDL_TEST_ENABLED=OFF
+	@cmake --build $(SDL_DEPS_DIR)/build-static -j4
+
+windows: $(SDL_DEPS_DIR) $(WIN_STATIC_LIB) $(WIN_DEST)
+	$(WIN_CC) src/*.c -Wall -Wextra -std=c99 -Iinclude -I$(SDL_WIN_INC) -o $(WIN_EMU_TARGET) $(WIN_LIBS)
 
 $(WIN_DEST):
 	mkdir -p $(WIN_DEST)
 
 clean:
-	@rm -rf obj $(EMU_TARGET) $(ASM_TARGET)
+	@rm -rf obj deps $(EMU_TARGET) $(ASM_TARGET)
 
 .PHONY: all clean windows

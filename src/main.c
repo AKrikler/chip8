@@ -1,25 +1,27 @@
 #include <stdio.h>
-#include <unistd.h>
 
 #include "chip8.h"
 #include "audio.h"
 #include "video.h"
 #include "keypad.h"
 #include "clock.h"
+#include "file.h"
 
-#define CYCLES_PER_FRAME 12
+#define CYCLES_PER_FRAME 30
 
-int main(int argc, char* argv[])
+
+int main(void)
 {
-	if (argc < 2) return fprintf(stderr, "Usage: %s <path/to/rom>\n", argv[0]), -1;
+	const char* file = open_file();
+	if (!file) return fprintf(stderr, "File not found\n"), -1;
 
 	Chip8 chip8;
 	Clock clock;
 	chip8_init(&chip8);
-	video_init(argv[1]);
+	video_init(file);
 	audio_init();
 	clock_init(&clock, 60.0);
-	chip8_load_rom(&chip8, argv[1]);
+	chip8_load_rom(&chip8, file);
 
 	while (1)
 	{	
