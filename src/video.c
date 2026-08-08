@@ -44,14 +44,12 @@ void video_close(void)
 {
 	if (!closed)
 	{
-		if (renderer) {
-			SDL_SetRenderTarget(renderer, NULL);
-		}
 		if (texture) {
 			SDL_DestroyTexture(texture);
 			texture = NULL;
 		}
 		if (renderer) {
+			SDL_SetRenderTarget(renderer, NULL);
 			SDL_DestroyRenderer(renderer);
 			renderer = NULL;
 		}

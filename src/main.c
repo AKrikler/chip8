@@ -7,8 +7,7 @@
 #include "clock.h"
 #include "file.h"
 
-#define CYCLES_PER_FRAME 30
-
+#define CYCLES_PER_FRAME 12
 
 int main(void)
 {
@@ -17,10 +16,10 @@ int main(void)
 
 	Chip8 chip8;
 	Clock clock;
-	chip8_init(&chip8);
 	video_init(file);
 	audio_init();
 	clock_init(&clock, 60.0);
+	chip8_init(&chip8);
 	chip8_load_rom(&chip8, file);
 
 	while (1)
@@ -31,7 +30,7 @@ int main(void)
 		{
 			for (int i = 0; i < CYCLES_PER_FRAME; i++) chip8_cycle(&chip8);
 		    if (chip8.delay_timer > 0) chip8.delay_timer--;
-		    if (chip8.sound_timer > 0) chip8.sound_timer--;	
+		    if (chip8.sound_timer > 0) chip8.sound_timer--;
 		}
 
 		audio_update(&chip8);

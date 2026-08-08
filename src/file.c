@@ -26,7 +26,7 @@ static void SDLCALL file_callback(void* userdata, const char* const* filelist, i
 }
 
 const char* open_file(void)
-{
+{	
 	if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) return NULL;
 	
 	FileDialogData data;
