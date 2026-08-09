@@ -57,6 +57,7 @@ Chip8Status chip8_load_rom(Chip8* chip8, const char* path)
 
 Chip8Status chip8_cycle(Chip8* chip8)
 {
+	if (chip8->pc + 1 > CHIP8_ROM_END) return CHIP8_ERR_OOB_MEMORY;
 	uint16_t opcode = (chip8->memory[chip8->pc] << 8) | (chip8->memory[chip8->pc+1]);
 	chip8->pc += 2;
 
@@ -72,15 +73,10 @@ Chip8Status chip8_cycle(Chip8* chip8)
 			if (opcode == 0x00E0) memset(chip8->display, 0, sizeof(chip8->display));
 			else if (opcode == 0x00EE)
 			{
-				if (chip8->sp > 0)
-				{
-					chip8->pc = chip8->stack[--chip8->sp];
-				}
-				else
-				{
-					return CHIP8_ERR_STACK_UNDERFLOW;
-				}
+				if (chip8->sp > 0) chip8->pc = chip8->stack[--chip8->sp];
+				else return CHIP8_ERR_STACK_UNDERFLOW;
 			}
+			else return CHIP8_ERR_UNKNOWN_OPCODE;
 			break;
 		case 0x1: chip8->pc = nnn; break;
 		case 0x2:
@@ -159,6 +155,7 @@ Chip8Status chip8_cycle(Chip8* chip8)
 					int x = (vx + j) % 64;
 					int y = (vy + i) % 32;
 					uint8_t prev = chip8->display[CHIP8_COORD(x, y)];
+					if (chip8->ir + i > CHIP8_ROM_END) return CHIP8_ERR_OOB_MEMORY;
 					chip8->display[CHIP8_COORD(x, y)] ^= (chip8->memory[chip8->ir + i] >> (7 - j)) & 1;
 					collision += prev == 1 && chip8->display[CHIP8_COORD(x, y)] != prev ? 1 : 0;
 				}
@@ -168,7 +165,8 @@ Chip8Status chip8_cycle(Chip8* chip8)
 		}
 		case 0xE:
 			if (kk == 0x9E && chip8->keypad[chip8->regs[x]]) chip8->pc += 2;
-            if (kk == 0xA1 && !chip8->keypad[chip8->regs[x]]) chip8->pc += 2;
+            else if (kk == 0xA1 && !chip8->keypad[chip8->regs[x]]) chip8->pc += 2;
+            else return CHIP8_ERR_UNKNOWN_OPCODE;
             break;
 		case 0xF:
 			switch (kk)
@@ -222,21 +220,43 @@ Chip8Status chip8_cycle(Chip8* chip8)
 				case 0x33:
 				{
 					uint8_t val = chip8->regs[x];
+					if (chip8->ir + 2 > CHIP8_ROM_END) return CHIP8_ERR_OOB_MEMORY;
 					chip8->memory[chip8->ir + 0] = val / 100;
 					chip8->memory[chip8->ir + 1] = (val / 10) % 10;
 					chip8->memory[chip8->ir + 2] = val % 10;
 					break;
 				}
-				case 0x55: 
+				case 0x55:
+					if (chip8->ir + x > CHIP8_ROM_END) return CHIP8_ERR_OOB_MEMORY;
 				    memcpy(chip8->memory + chip8->ir, chip8->regs, x + 1); 
-				    chip8->ir += (x + 1);
+				    chip8->ir += x + 1;
 				    break;
-				case 0x65: 
+				case 0x65:
+					if (chip8->ir + x > CHIP8_ROM_END) return CHIP8_ERR_OOB_MEMORY;
 				    memcpy(chip8->regs, chip8->memory + chip8->ir, x + 1); 
-				    chip8->ir += (x + 1); 
+				    chip8->ir += x + 1; 
 				    break;
+				default:
+					return CHIP8_ERR_UNKNOWN_OPCODE;
 			}
 			break;
 	}
 	return CHIP8_OK;
+}
+
+const char* chip8_status_str(Chip8Status status)
+{
+    switch (status)
+    {
+        case CHIP8_OK:                    return "OK";
+        case CHIP8_DREW_FRAME:            return "Drew frame";
+        case CHIP8_ERR_STACK_OVERFLOW:    return "Stack overflow";
+        case CHIP8_ERR_STACK_UNDERFLOW:   return "Stack underflow";
+        case CHIP8_ERR_FILE_NOT_FOUND:    return "ROM file not found";
+        case CHIP8_ERR_ROM_TOO_LARGE:     return "ROM too large";
+        case CHIP8_ERR_INVALID_ROM:       return "Invalid ROM";
+        case CHIP8_ERR_UNKNOWN_OPCODE:    return "Unknown opcode";
+        case CHIP8_ERR_OOB_MEMORY:        return "Out-of-bounds memory access";
+    }
+    return "Unknown status";
 }

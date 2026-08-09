@@ -9,6 +9,7 @@
 
 #define CYCLES_PER_FRAME 12
 
+
 int main(void)
 {
 	const char* file = open_file();
@@ -20,7 +21,8 @@ int main(void)
 	audio_init();
 	clock_init(&clock, 60.0);
 	chip8_init(&chip8);
-	chip8_load_rom(&chip8, file);
+	Chip8Status rom_status = chip8_load_rom(&chip8, file);
+	if (rom_status < 0) return fprintf(stderr, "Failed to load ROM: %s\n", chip8_status_str(rom_status)), -1;
 
 	while (1)
 	{	
@@ -28,7 +30,15 @@ int main(void)
 
 		if (clock_process_frame(&clock))
 		{
-			for (int i = 0; i < CYCLES_PER_FRAME; i++) chip8_cycle(&chip8);
+			for (int i = 0; i < CYCLES_PER_FRAME; i++)
+			{
+				Chip8Status cycle_status = chip8_cycle(&chip8);
+				if (cycle_status < 0)
+				{
+				    fprintf(stderr, "Error: %s\n", chip8_status_str(cycle_status));
+				    goto quit;
+				}
+			}
 		    if (chip8.delay_timer > 0) chip8.delay_timer--;
 		    if (chip8.sound_timer > 0) chip8.sound_timer--;
 		}
@@ -37,6 +47,7 @@ int main(void)
 		video_render(&chip8);
 	}
 
+quit:
 	audio_close();
 	video_close();
 	return 0;

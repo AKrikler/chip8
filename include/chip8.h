@@ -5,11 +5,14 @@
 
 #define CHIP8_DISPLAY_WIDTH 64
 #define CHIP8_DISPLAY_HEIGHT 32
-#define CHIP8_ROM_START 0x200
+#define CHIP8_ROM_START 512
+#define CHIP8_ROM_END 4095
 
 #define CHIP8_COORD(x, y) ((x) + (y) * CHIP8_DISPLAY_WIDTH)
 
 typedef enum {
+	CHIP8_ERR_OOB_MEMORY	  = -7,
+	CHIP8_ERR_UNKNOWN_OPCODE  = -6,
 	CHIP8_ERR_INVALID_ROM	  = -5,
 	CHIP8_ERR_ROM_TOO_LARGE   = -4,
 	CHIP8_ERR_FILE_NOT_FOUND  = -3,
@@ -36,5 +39,6 @@ typedef struct
 void chip8_init(Chip8* chip8);
 Chip8Status chip8_load_rom(Chip8* chip8, const char* filename);
 Chip8Status chip8_cycle(Chip8* chip8);
+const char* chip8_status_str(Chip8Status status);
 
 #endif

@@ -3,5 +3,6 @@ assembler
 
 obj/
 deps/
+SDL/
 
 *.exe
