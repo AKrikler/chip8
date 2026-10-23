@@ -1,6 +1,6 @@
 # CHIP-8 Emulator & Assembler
 
-A cross-platform CHIP-8 emulator and assembler written in C (`-std=c99`), with hardware rendering via SDL2, audio, and input handling.
+A cross-platform CHIP-8 emulator and assembler written in C (`-std=c99`), with hardware rendering via SDL3, audio, and input handling.
 
 ## Features
 * **CHIP-8 Interpreter:** Full implementation of standard instructions, ROM loading, and memory management.
